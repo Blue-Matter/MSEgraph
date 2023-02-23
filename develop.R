@@ -16,35 +16,73 @@ OM2@seed <- OM2@seed * 2
 Hist1 <- MSEtool::Simulate(OM1)
 Hist2 <- MSEtool::Simulate(OM2)
 
-MSE1 <- MSEtool::Project(Hist1)
-MSE2 <- MSEtool::Project(Hist2)
+# need to edit MSE object to always include Hist
+MSE1 <- MSEtool::Project(Hist1, extended = TRUE)
+MSE2 <- MSEtool::Project(Hist2, extended = TRUE)
 
 HistList <- list(Model_1=Hist1, Model_2=Hist2, Model_3=Hist1, Model_4=Hist2)
 MSEList <- list(Model_1=MSE1, Model_2=MSE2, Model_3=MSE1, Model_4=MSE2)
 
+# devtools::load_all()
 
 # Everything below uses only MSEgraph package (and dependencies)
 library(MSEgraph)
 
-# Get data.frames
+# ---- Get time-series data.frames ----
+valid_ts_variables()
+
+
 get_SSB(Hist1)
-get_SSB(HistList)
 get_SSB(MSE1)
+get_SSB(HistList)
 get_SSB(MSEList)
 
+get_Biomass(Hist1)
+get_Biomass(MSE1)
+get_Biomass(HistList)
+get_Biomass(MSEList)
+
+get_Landings(Hist1)
+get_Landings(MSE1)
+get_Landings(HistList)
+get_Landings(MSEList)
+
+get_Removals(Hist1)
+get_Removals(MSE1)
+get_Removals(HistList)
+get_Removals(MSEList)
+
+
+get_Recruits(Hist1)
+get_Recruits(HistList)
+get_Recruits(MSE1) # doesn't work yet - requires latest version of MSEtool
+get_Recruits(MSEList) # doesn't work yet - requires latest version of MSEtool
+
+get_LifeHistory
+
+
+p <- plot_SSB(Hist1, print=FALSE)
+p$plot
+p$df
 
 plot_SSB(Hist1)
-plot_SSB(Hist1, title='my Title')
+plot_SSB(Hist1, facet=FALSE)
+plot_SSB(Hist1, facet=FALSE, inc.Legend=FALSE)
 plot_SSB(HistList)
+plot_SSB(HistList, facet=FALSE)
+
 plot_SSB(MSE1)
+plot_SSB(MSE1, facet=FALSE)
+plot_SSB(MSE1, inc.Hist=TRUE)
+plot_SSB(MSE1, inc.Hist=TRUE, facet=FALSE)
+
 plot_SSB(MSEList)
-plot_SSB(list(Hist1, Hist2))
-plot_SSB(list(MSE1, MSE2))
+plot_SSB(MSEList, facet=FALSE)
 
 # median only
 plot_SSB(Hist1, quantiles=0.5)
-plot_SSB(MSEList, quantiles=c(0.5,0.5))
-
+plot_SSB(MSEList, quantiles=0.5)
+plot_SSB(MSEList, quantiles=0.5, facet=FALSE)
 
 
 plot_Biomass(Hist1)
@@ -52,12 +90,10 @@ plot_Biomass(HistList)
 plot_Biomass(MSE1)
 plot_Biomass(MSEList)
 
-
 plot_Landings(Hist1)
 plot_Landings(HistList)
 plot_Landings(MSE1)
 plot_Landings(MSEList)
-
 
 plot_Removals(Hist1)
 plot_Removals(HistList)

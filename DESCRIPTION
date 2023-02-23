@@ -12,4 +12,5 @@ LazyData: true
 RoxygenNote: 7.2.3
 Depends: 
     ggplot2,
-    dplyr
+    dplyr,
+    R (>= 2.10)

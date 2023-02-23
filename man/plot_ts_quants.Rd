@@ -13,7 +13,8 @@ plot_ts_quants(
   lwd = 1,
   inc_legend = FALSE,
   use_theme = NULL,
-  colpalette = "Dark2"
+  colpalette = "Dark2",
+  print = TRUE
 )
 }
 \arguments{

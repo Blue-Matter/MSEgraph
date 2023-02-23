@@ -2,18 +2,18 @@
 % Please edit documentation in R/get_data_frames.R
 \name{get_SSB}
 \alias{get_SSB}
-\alias{get_SSB.Hist}
-\alias{get_SSB.MSE}
-\alias{get_SSB.list}
+\alias{get_Biomass}
+\alias{get_Landings}
+\alias{get_Removals}
 \title{Title}
 \usage{
-get_SSB(x, name = "Name")
+get_SSB(x, model = "Model 1")
 
-\method{get_SSB}{Hist}(x, name = "Name")
+get_Biomass(x, model = "Model 1")
 
-\method{get_SSB}{MSE}(x, name = "Name")
+get_Landings(x, model = "Model 1")
 
-\method{get_SSB}{list}(x, name = "Name")
+get_Removals(x, model = "Model 1")
 }
 \arguments{
 \item{name}{}
