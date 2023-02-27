@@ -1,9 +1,14 @@
-summary_df <- function(x, quantiles=c(0.025, 0.975), func=get_SSB) {
-  df <- func(x)
+summary_df <- function(x, quantiles=c(0.025, 0.975), func=get_SSB, scale=NULL) {
+  df <- func(x, scale=scale)
   if (!is.null(df[['MP']])) {
     df <- df %>%  group_by(Year, MP,Variable, Period, Model)
   } else {
-    df <- df %>%  group_by(Year,Variable, Period, Model)
+    if (!is.null(df[['Fleet']])) {
+      df <- df %>%  group_by(Year,Variable, Period, Model, Fleet)
+    } else {
+      df <- df %>%  group_by(Year,Variable, Period, Model)
+    }
+
   }
   if (length(quantiles)==1) {
     if(quantiles==0.5) {
@@ -70,17 +75,27 @@ plot_ts_quants <- function(df,
       }
 
     } else {
-      p <- p + facet_wrap(~Model)
-    }
+      if (!is.null(df[['Fleet']])) {
+        p <- p + facet_wrap(Fleet~Model)
+      } else {
+        p <- p + facet_wrap(~Model)
+      }
 
+    }
 
   } else {
     p <- ggplot(df, aes(x=Year, y=Median, ymin=Lower, ymax=Upper))+
       geom_ribbon(alpha=alpha, aes(fill=Model)) +
       geom_line(linewidth=lwd, aes(color=Model))
 
-    if (facet)
-      p <- p + facet_wrap(~Model)
+    if (facet) {
+      if (!is.null(df[['Fleet']])) {
+        p <- p + facet_grid(Model~Fleet, scales='free_y')
+      } else {
+        p <- p + facet_wrap(~Model)
+      }
+    }
+
 
   }
   p <- p  +
@@ -117,8 +132,9 @@ plot_SSB <- function(x,
                      xlab='Year',
                      ylab='Spawning Biomass',
                      quantiles=c(0.025, 0.975),
+                     scale=NULL,
                      ...) {
-  df <- summary_df(x, quantiles=quantiles, get_SSB)
+  df <- summary_df(x, quantiles=quantiles, get_SSB, scale=scale)
   plot_ts_quants(df, xlab=xlab, ylab=ylab, title=title, ...)
 }
 
@@ -154,8 +170,9 @@ plot_Biomass <- function(x,
                          xlab='Year',
                          ylab='Biomass',
                          quantiles=c(0.025, 0.975),
+                         scale=NULL,
                          ...) {
-  df <- summary_df(x, quantiles=quantiles, get_Biomass)
+  df <- summary_df(x, quantiles=quantiles, get_Biomass, scale=scale)
   plot_ts_quants(df, xlab=xlab, ylab=ylab, title=title, ...)
 
 }
@@ -193,8 +210,9 @@ plot_Landings <- function(x,
                          xlab='Year',
                          ylab='Landings',
                          quantiles=c(0.025, 0.975),
+                         scale=NULL,
                          ...) {
-  df <- summary_df(x, quantiles=quantiles, get_Landings)
+  df <- summary_df(x, quantiles=quantiles, get_Landings, scale=scale)
   plot_ts_quants(df, xlab=xlab, ylab=ylab, title=title, ...)
 
 }
@@ -233,8 +251,9 @@ plot_Removals <- function(x,
                           xlab='Year',
                           ylab='Removals',
                           quantiles=c(0.025, 0.975),
+                          scale=NULL,
                           ...) {
-  df <- summary_df(x, quantiles=quantiles, get_Removals)
+  df <- summary_df(x, quantiles=quantiles, get_Removals, scale=scale)
   plot_ts_quants(df, xlab=xlab, ylab=ylab, title=title, ...)
 
 }

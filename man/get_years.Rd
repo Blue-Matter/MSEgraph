@@ -4,6 +4,7 @@
 \alias{get_years}
 \alias{get_years.MSE}
 \alias{get_years.Hist}
+\alias{get_years.multiHist}
 \title{Create a data.frame with Historical and Projection years}
 \usage{
 get_years(x)
@@ -11,6 +12,8 @@ get_years(x)
 \method{get_years}{MSE}(x)
 
 \method{get_years}{Hist}(x)
+
+\method{get_years}{multiHist}(x)
 }
 \arguments{
 \item{x}{An object of class `Hist`, `MSE`, `multiHist`, or `MMSE`}

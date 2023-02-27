@@ -23,24 +23,30 @@ MSE2 <- MSEtool::Project(Hist2, extended = TRUE)
 HistList <- list(Model_1=Hist1, Model_2=Hist2, Model_3=Hist1, Model_4=Hist2)
 MSEList <- list(Model_1=MSE1, Model_2=MSE2, Model_3=MSE1, Model_4=MSE2)
 
+
+multiHist <- readRDS("C:/Users/User/Documents/GitHub/SAFMC-MSE/Hist_Objects/RS_SEDAR.hist")
+
 # devtools::load_all()
 
 # Everything below uses only MSEgraph package (and dependencies)
 library(MSEgraph)
 
 # ---- Get time-series data.frames ----
-valid_ts_variables()
-
 
 get_SSB(Hist1)
 get_SSB(MSE1)
 get_SSB(HistList)
 get_SSB(MSEList)
 
+divide_1000 <- function(x) x/1000
+get_SSB(multiHist, scale=divide_1000)
+
 get_Biomass(Hist1)
 get_Biomass(MSE1)
 get_Biomass(HistList)
 get_Biomass(MSEList)
+
+get_Biomass(multiHist)
 
 get_Landings(Hist1)
 get_Landings(MSE1)
@@ -52,13 +58,47 @@ get_Removals(MSE1)
 get_Removals(HistList)
 get_Removals(MSEList)
 
+get_Removals(multiHist)
+
 
 get_Recruits(Hist1)
 get_Recruits(HistList)
 get_Recruits(MSE1) # doesn't work yet - requires latest version of MSEtool
 get_Recruits(MSEList) # doesn't work yet - requires latest version of MSEtool
 
-get_LifeHistory
+
+get_at_Age <- function(x, model='Model 1') {
+  UseMethod("get_at_Age")
+}
+
+#' @export
+#' @rdname get_ts
+get_at_Age.Hist <- function(x, model='Model 1') {
+
+  Vars <- c('Length', 'Weight', 'Select', 'Retention',
+            'Maturity', 'N.Mortality', 'Z.Mortality', 'F.Mortality',
+            'Number')
+  years <- get_years(x)
+  nage <- length(x@AtAge$Length[1,,1])
+  Ages <- 0:(nage-1)
+
+  df_out <- data.frame(Year=rep(years$Year, each=nage),
+                       Age=Ages,
+                       Model=model)
+  for (i in seq_along(Vars)) {
+    var <- Vars[i]
+    dd <- dim(x@AtAge[[var]])
+    if (length(dd)==3) {
+      df_out[[var]] <- as.vector(x@AtAge[[var]][1,,])
+    } else {
+      df_out[[var]] <- as.vector(x@AtAge[[var]][1,,,1])
+    }
+  }
+  df_out
+
+}
+get_at_Age.Hist(Hist1)
+
 
 
 p <- plot_SSB(Hist1, print=FALSE)
@@ -70,6 +110,9 @@ plot_SSB(Hist1, facet=FALSE)
 plot_SSB(Hist1, facet=FALSE, inc.Legend=FALSE)
 plot_SSB(HistList)
 plot_SSB(HistList, facet=FALSE)
+
+plot_SSB(multiHist)
+
 
 plot_SSB(MSE1)
 plot_SSB(MSE1, facet=FALSE)
@@ -99,6 +142,8 @@ plot_Removals(Hist1)
 plot_Removals(HistList)
 plot_Removals(MSE1)
 plot_Removals(MSEList)
+
+plot_Removals(multiHist)
 
 # Recruits
 

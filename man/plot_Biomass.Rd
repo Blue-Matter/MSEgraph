@@ -13,6 +13,7 @@ plot_Biomass(
   xlab = "Year",
   ylab = "Biomass",
   quantiles = c(0.025, 0.975),
+  scale = NULL,
   ...
 )
 

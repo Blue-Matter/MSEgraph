@@ -7,14 +7,16 @@
 plot_ts_quants(
   df,
   xlab = "Year",
-  ylab = "",
+  ylab = NULL,
   title = "",
   alpha = 0.1,
   lwd = 1,
-  inc_legend = FALSE,
   use_theme = NULL,
   colpalette = "Dark2",
-  print = TRUE
+  print = TRUE,
+  inc.Hist = FALSE,
+  facet = TRUE,
+  inc.Legend = !facet
 )
 }
 \arguments{

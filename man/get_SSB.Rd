@@ -5,15 +5,18 @@
 \alias{get_Biomass}
 \alias{get_Landings}
 \alias{get_Removals}
+\alias{get_Recruits}
 \title{Title}
 \usage{
-get_SSB(x, model = "Model 1")
+get_SSB(x, model = "Model 1", ...)
 
-get_Biomass(x, model = "Model 1")
+get_Biomass(x, model = "Model 1", ...)
 
-get_Landings(x, model = "Model 1")
+get_Landings(x, model = "Model 1", ...)
 
-get_Removals(x, model = "Model 1")
+get_Removals(x, model = "Model 1", ...)
+
+get_Recruits(x, model = "Model 1", ...)
 }
 \arguments{
 \item{name}{}

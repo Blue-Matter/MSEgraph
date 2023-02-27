@@ -13,6 +13,7 @@ plot_SSB(
   xlab = "Year",
   ylab = "Spawning Biomass",
   quantiles = c(0.025, 0.975),
+  scale = NULL,
   ...
 )
 

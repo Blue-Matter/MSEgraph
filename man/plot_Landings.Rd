@@ -13,6 +13,7 @@ plot_Landings(
   xlab = "Year",
   ylab = "Landings",
   quantiles = c(0.025, 0.975),
+  scale = NULL,
   ...
 )
 

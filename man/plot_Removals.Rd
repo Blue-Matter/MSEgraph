@@ -13,6 +13,7 @@ plot_Removals(
   xlab = "Year",
   ylab = "Removals",
   quantiles = c(0.025, 0.975),
+  scale = NULL,
   ...
 )
 
