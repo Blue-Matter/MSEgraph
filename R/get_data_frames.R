@@ -206,7 +206,7 @@ get_ts.MSE <- function(x, variable='Spawning Biomass', model='Model 1', scale=NU
   nMPs <- x@nMPs
   MPs <- x@MPs
 
-  hist_df <- get_ts(x@Hist, variable=variable, model=model) %>%
+  hist_df <- get_ts(x@Hist, variable=variable, model=model, scale=scale) %>%
     add_MPs(., MPs)
 
   proj.years <- get_years(x) %>% filter(Period=='Projection')
@@ -369,6 +369,14 @@ get_at_Age.Hist <- function(x, model='Model 1') {
 
 #' @export
 #' @rdname get_at_Age
+get_at_Age.list <- function(x, model='Model 1') {
+  x <- check_names(x)
+  purrr::map2(x, names(x), get_at_Age) %>%
+    purrr::list_rbind()
+}
+
+#' @export
+#' @rdname get_at_Age
 get_at_Age.multiHist <- function(x, model='Model 1') {
 
   n_stocks <- length(x)
@@ -388,6 +396,70 @@ get_at_Age.multiHist <- function(x, model='Model 1') {
     stock_list[[st]] <- purrr::list_rbind(stock_list[[st]])
   }
   do.call('rbind',stock_list)
+}
+
+#' @export
+#' @rdname get_at_Age
+get_at_Age.MSE <- function(x, model='Model 1') {
+  get_at_Age(x@Hist, model=model)
+
+}
+
+
+#' Title
+#'
+#' @param x
+#' @param model
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_LifeHistory <- function(x, model='Model 1') {
+  UseMethod("get_LifeHistory")
+}
+
+#' @export
+#' @rdname get_LifeHistory
+get_LifeHistory.Hist <- function(x, model='Model 1') {
+
+  Vars <- c('Linf', 'K', 'M', 'L50', 'ageM')
+
+  years <- get_years(x)
+  dd <- dim(x@AtAge$Select)
+  nsim <- dd[1]
+  nage <- dd[2]
+  nyear <- dd[3]
+  Ages <- 0:(nage-1)
+
+  df_out <- data.frame(Year=rep(years$Year, each=nsim),
+                       Sim=1:nsim,
+                       Period=years$Period,
+                       Model=model)
+
+  for (i in seq_along(Vars)) {
+    var <- Vars[i]
+    var2 <- paste0(Vars[i], 'array')
+    df_out[[var]] <- as.vector(x@SampPars$Stock[[var2]])
+  }
+  df_out %>% tidyr::pivot_longer(., cols=all_of(Vars),
+                                 names_to = 'Variable',
+                                 values_to='Value')
+}
+
+#' @export
+#' @rdname get_LifeHistory
+get_LifeHistory.list <- function(x, model='Model 1') {
+  x <- check_names(x)
+  purrr::map2(x, names(x), get_LifeHistory) %>%
+    purrr::list_rbind()
+}
+
+#' @export
+#' @rdname get_LifeHistory
+get_LifeHistory.MSE <- function(x, model='Model 1') {
+  Hist <- x@Hist
+  get_LifeHistory(Hist, model=model)
 }
 
 

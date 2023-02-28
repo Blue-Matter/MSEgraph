@@ -15,7 +15,7 @@
 # Object classes:
 # - Hist
 # - MSE
-# - multiHist
+# - multiHist - incomplete
 # - list(Hist, Hist, ...) # list of Hist objects
 # - list(MSE, MSE, ...) # list of MSE objects
 # - PPD@Misc - Assessment_report
@@ -54,39 +54,37 @@ get_SSB(HistList) %>% tail()
 get_SSB(MSEList) %>% head()
 get_SSB(MSEList) %>% tail()
 
-get_SSB(multiHist) %>% head()
-get_SSB(multiHist) %>% tail()
-
 # use a custom function to scale Value
 divide_1000 <- function(x) x/1000
-get_SSB(multiHist, scale=divide_1000)
+get_SSB(MSEList, scale=divide_1000)
+
 
 # ---- Biomass ----
 get_Biomass(Hist1)
 get_Biomass(MSE1)
 get_Biomass(HistList)
 get_Biomass(MSEList)
-get_Biomass(multiHist)
+
 
 # ---- Landings ----
 get_Landings(Hist1)
 get_Landings(MSE1)
 get_Landings(HistList)
 get_Landings(MSEList)
-get_Landings(multiHist)
+
 
 # ---- Removals ----
 get_Removals(Hist1)
 get_Removals(MSE1)
 get_Removals(HistList)
 get_Removals(MSEList)
-get_Removals(multiHist)
+
 
 # ---- Recruits ----
 get_Recruits(Hist1)
 get_Recruits(HistList)
 
-# to do
+# TODO - requires update to MSEtool
 get_Recruits(MSE1)
 get_Recruits(MSEList)
 
@@ -100,17 +98,33 @@ get_assess_estimates(MSEList) %>% tail()
 assess_estimates <- get_assess_estimates(MSE1)
 assess_estimates$variable %>% unique()
 
-# ---- Time-Series by Age ----
+# ---- At-Age Schedules by Year ----
 # Works on Hist, MSE, and multiHist objects
 
 get_at_Age(Hist1)
-get_at_Age(multiHist) %>% head()
-get_at_Age(multiHist) %>% tail()
+get_at_Age(HistList) %>% head()
+get_at_Age(HistList) %>% tail()
+
+get_at_Age(MSE1)
+
+get_at_Age(MSEList) %>% head()
+get_at_Age(MSEList) %>% tail()
+
+
+
+# ---- Life-History Parameters by Year ----
+
+get_LifeHistory(Hist1)
+get_LifeHistory(MSE1)
+get_LifeHistory(HistList)
+get_LifeHistory(MSEList)
+
 
 
 
 # ---- Plots ------
 
+# ----- Time-Series Plots ----
 p <- plot_SSB(Hist1, print=FALSE)
 p$plot
 p$df
@@ -124,20 +138,20 @@ plot_SSB(HistList, facet=FALSE)
 plot_SSB(multiHist)
 plot_SSB(multiHist, facet=FALSE)
 
-
 plot_SSB(MSE1)
 plot_SSB(MSE1, facet=FALSE)
 plot_SSB(MSE1, inc.Hist=TRUE)
 plot_SSB(MSE1, inc.Hist=TRUE, facet=FALSE)
 
 plot_SSB(MSEList)
+plot_SSB(MSEList, inc.Hist=TRUE)
 plot_SSB(MSEList, facet=FALSE)
+plot_SSB(MSEList, facet=FALSE, quantiles=0.5)
 
 # median only
 plot_SSB(Hist1, quantiles=0.5)
 plot_SSB(MSEList, quantiles=0.5)
 plot_SSB(MSEList, quantiles=0.5, facet=FALSE)
-
 
 plot_Biomass(Hist1)
 plot_Biomass(HistList)
@@ -156,8 +170,27 @@ plot_Removals(MSEList)
 
 plot_Removals(multiHist)
 
+plot_Recruits(Hist1)
+plot_Recruits(MSE1) # todo
+plot_Recruits(HistList)
+plot_Recruits(MSEList) # todo
 
-# Recruits
+# revise TS plots for different facet types
+plot_LifeHistory <- function(x,
+                             title='',
+                             xlab='Year',
+                             ylab='Recruits',
+                             quantiles=c(0.025, 0.975),
+                             ...) {
+
+  df <- summary_df(x, quantiles=quantiles, get_LifeHistory)
+  plot_ts_quants(df, xlab=xlab, ylab=ylab, title=title, ...)
+
+}
+
+# ---- Plot At-Age Schedules ----
+
+
 
 # Linf
 

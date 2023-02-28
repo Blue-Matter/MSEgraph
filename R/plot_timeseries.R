@@ -1,5 +1,11 @@
 summary_df <- function(x, quantiles=c(0.025, 0.975), func=get_SSB, scale=NULL) {
-  df <- func(x, scale=scale)
+
+  if (is.null(formals(func)$scale)) {
+    df <- func(x)
+  } else {
+    df <- func(x, scale=scale)
+  }
+
   if (!is.null(df[['MP']])) {
     df <- df %>%  group_by(Year, MP,Variable, Period, Model)
   } else {
@@ -54,10 +60,17 @@ plot_ts_quants <- function(df,
                            inc.Legend=!facet) {
 
   n_scens <- length(unique(df$Model))
+  n_variables <- length(unique(df$Variable))
 
   if (!inc.Hist & 'Projection' %in% df$Period) {
     df <- df %>% dplyr::filter(Period!='Historical')
   }
+
+  p <- ggplot(df, aes(x=Year, y=Median, ymin=Lower, ymax=Upper)) +
+    geom_ribbon(alpha=alpha) +
+    geom_line(linewidth=lwd) +
+    facet_wrap(~Variable, scales='free_y')
+
 
   if (is.null(ylab))
     ylab <- unique(df$Variable)
@@ -274,5 +287,46 @@ plot_Removals.list <- function(x, ...) {
 #' @rdname plot_Removals
 plot_Removals.MSE <- function(x, ...) {
   UseMethod("plot_Removals")
+
+}
+
+
+#' Title
+#'
+#' @param x
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_Recruits <- function(x,
+                          title='',
+                          xlab='Year',
+                          ylab='Recruits',
+                          quantiles=c(0.025, 0.975),
+                          scale=NULL,
+                          ...) {
+  df <- summary_df(x, quantiles=quantiles, get_Recruits, scale=scale)
+  plot_ts_quants(df, xlab=xlab, ylab=ylab, title=title, ...)
+
+}
+
+#' @export
+#' @rdname plot_Recruits
+plot_Recruits.Hist <- function(x, ...) {
+  UseMethod("plot_Recruits")
+}
+
+#' @export
+#' @rdname plot_Recruits
+plot_Recruits.list <- function(x, ...) {
+  UseMethod("plot_Recruits")
+}
+
+#' @export
+#' @rdname plot_Recruits
+plot_Recruits.MSE <- function(x, ...) {
+  UseMethod("plot_Recruits")
 
 }

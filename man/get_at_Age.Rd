@@ -3,14 +3,20 @@
 \name{get_at_Age}
 \alias{get_at_Age}
 \alias{get_at_Age.Hist}
+\alias{get_at_Age.list}
 \alias{get_at_Age.multiHist}
+\alias{get_at_Age.MSE}
 \title{Title}
 \usage{
 get_at_Age(x, model = "Model 1")
 
 \method{get_at_Age}{Hist}(x, model = "Model 1")
 
+\method{get_at_Age}{list}(x, model = "Model 1")
+
 \method{get_at_Age}{multiHist}(x, model = "Model 1")
+
+\method{get_at_Age}{MSE}(x, model = "Model 1")
 }
 \arguments{
 \item{model}{}
