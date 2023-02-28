@@ -26,10 +26,21 @@ get_years.MSE <- function(x) {
 #' @rdname get_years
 get_years.Hist <- function(x) {
   Hist <- x
-  hist.yrs <- (Hist@OM@CurrentYr -  Hist@OM@nyears + 1):Hist@OM@CurrentYr
-  proj.yrs <- (Hist@OM@CurrentYr[1]+1):(Hist@OM@CurrentYr[1]+Hist@OM@proyears)
-  data.frame(Year=c(hist.yrs, proj.yrs), Period=c(rep('Historical', Hist@OM@nyears),
-                                                  rep('Projection', Hist@OM@proyears)))
+  if (length(Hist@OM@CurrentYr)>0) {
+    hist.yrs <- (Hist@OM@CurrentYr -  Hist@OM@nyears + 1):Hist@OM@CurrentYr
+    proj.yrs <- (Hist@OM@CurrentYr[1]+1):(Hist@OM@CurrentYr[1]+Hist@OM@proyears)
+    out <- data.frame(Year=c(hist.yrs, proj.yrs), Period=c(rep('Historical', Hist@OM@nyears),
+                                                    rep('Projection', Hist@OM@proyears)))
+  } else {
+    hist.yrs <- x@Data@Year
+    CurrentYr <- max(hist.yrs)
+    nyears <- length(hist.yrs)
+    proyears <- x@Misc$MOM@proyears
+    proj.yrs <- (CurrentYr+1):(CurrentYr[1]+proyears)
+    out <- data.frame(Year=c(hist.yrs, proj.yrs), Period=c(rep('Historical', nyears),
+                                                    rep('Projection', proyears)))
+  }
+  out
 }
 
 #' @export
@@ -233,18 +244,6 @@ get_ts.list <- function(x, variable='Spawning Biomass', model='Model 1', scale=N
 
 
 
-
-get_years.Hist <- function(x) {
-  Hist <- x
-  hist.yrs <- (Hist@OM@CurrentYr -  Hist@OM@nyears + 1):Hist@OM@CurrentYr
-  proj.yrs <- (Hist@OM@CurrentYr[1]+1):(Hist@OM@CurrentYr[1]+Hist@OM@proyears)
-  data.frame(Year=c(hist.yrs, proj.yrs), Period=c(rep('Historical', Hist@OM@nyears),
-                                                  rep('Projection', Hist@OM@proyears)))
-}
-
-
-
-
 #' Title
 #'
 #' @param x
@@ -289,4 +288,106 @@ check_names <- function(x) {
   }
   x
 }
+
+
+#' Title
+#'
+#' @param x
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_assess_estimates <- function(x, ...) {
+  UseMethod('get_assess_estimates')
+}
+
+#' @export
+#' @rdname get_assess_estimates
+get_assess_estimates.MSE <- function(x, model='Model 1') {
+  lapply(1:x@nMPs, get_assess_estimates.MSE.MP, MSE=x, model=model) %>%
+    bind_rows()
+}
+
+get_assess_estimates.MSE.MP <- function(mp, MSE, model='Model 1') {
+  lapply(1:MSE@nsim, function(x) {
+    if (!is.null(MSE@PPD[[mp]]@Misc[[x]]$Assessment_report)) {
+      MSE@PPD[[mp]]@Misc[[x]]$Assessment_report %>%
+        mutate(MP = MSE@MPs[mp], Simulation = x, Model=model)
+    }
+
+  })
+}
+
+#' @export
+#' @rdname get_assess_estimates
+get_assess_estimates.list <- function(x) {
+  x <- check_names(x)
+  purrr::map2(x, names(x), get_assess_estimates.MSE) %>%
+    purrr::list_rbind()
+}
+
+
+#' Title
+#'
+#' @param x
+#' @param model
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_at_Age <- function(x, model='Model 1') {
+  UseMethod("get_at_Age")
+}
+
+#' @export
+#' @rdname get_at_Age
+get_at_Age.Hist <- function(x, model='Model 1') {
+
+  Vars <- c('Length', 'Weight', 'Select', 'Retention', 'Maturity', 'N.Mortality')
+  years <- get_years(x)
+  dd <- dim(x@AtAge$Select)
+  nsim <- dd[1]
+  nage <- dd[2]
+  nyear <- dd[3]
+  Ages <- 0:(nage-1)
+
+  df_out <- data.frame(Year=rep(years$Year, each=nsim*nage),
+                       Sim=1:nsim,
+                       Age=rep(Ages, each=nsim),
+                       Period=years$Period,
+                       Model=model)
+
+  for (i in seq_along(Vars)) {
+    var <- Vars[i]
+    df_out[[var]] <- as.vector(x@AtAge[[var]])
+  }
+  df_out
+}
+
+#' @export
+#' @rdname get_at_Age
+get_at_Age.multiHist <- function(x, model='Model 1') {
+
+  n_stocks <- length(x)
+  stock_names <- names(x)
+  n_fleets <- length(x[[1]])
+  fleet_names <- names(x[[1]])
+
+  stock_list <- list()
+  for (st in 1:n_stocks) {
+    stock_list[[st]] <- list()
+    for (fl in 1:n_fleets) {
+      df_out <- get_at_Age.Hist(x[[st]][[fl]])
+      df_out$Stock <- stock_names[st]
+      df_out$Fleet <- fleet_names[fl]
+      stock_list[[st]][[fl]] <- df_out
+    }
+    stock_list[[st]] <- purrr::list_rbind(stock_list[[st]])
+  }
+  do.call('rbind',stock_list)
+}
+
 

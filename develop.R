@@ -5,101 +5,111 @@
 # hist_hMSEs <- readRDS("C:/Users/User/Documents/GitHub/FSERP-herring/MSEs/hist_hMSEs.rda")
 # MSEs <- readRDS("C:/Users/User/Documents/GitHub/FSERP-herring/MSEs/HG/hMSEs_NF.rda")
 
-# Create some Hist and MSE objects for development
-library(MSEtool)
-OM1 <- MSEtool::testOM
-OM2 <- MSEtool::testOM
-OM1@CurrentYr <- 2023
-OM2@CurrentYr <- 2023
-OM2@seed <- OM2@seed * 2
+# TODO:
+# - MSEtool: Hist object should always be included in MSE object
 
-Hist1 <- MSEtool::Simulate(OM1)
-Hist2 <- MSEtool::Simulate(OM2)
+# Functions:
+# get_ - return data.frames with time-series information
+# plot_ - plot the data.frames
 
-# need to edit MSE object to always include Hist
-MSE1 <- MSEtool::Project(Hist1, extended = TRUE)
-MSE2 <- MSEtool::Project(Hist2, extended = TRUE)
+# Object classes:
+# - Hist
+# - MSE
+# - multiHist
+# - list(Hist, Hist, ...) # list of Hist objects
+# - list(MSE, MSE, ...) # list of MSE objects
+# - PPD@Misc - Assessment_report
 
-HistList <- list(Model_1=Hist1, Model_2=Hist2, Model_3=Hist1, Model_4=Hist2)
-MSEList <- list(Model_1=MSE1, Model_2=MSE2, Model_3=MSE1, Model_4=MSE2)
+# Not done yet:
+# - RCM
+# - Assessment
+# - MMSE
 
-
-multiHist <- readRDS("C:/Users/User/Documents/GitHub/SAFMC-MSE/Hist_Objects/RS_SEDAR.hist")
-
-# devtools::load_all()
+# Load some Hist and MSE objects for development
+test.objects <- readRDS('test-objects.rda')
+Hist1 <- test.objects$Hist1
+Hist2 <- test.objects$Hist2
+MSE1 <- test.objects$MSE1
+MSE2 <- test.objects$MSE2
+HistList <- test.objects$HistList
+MSEList <- test.objects$MSEList
+multiHist <- test.objects$multiHist
 
 # Everything below uses only MSEgraph package (and dependencies)
 library(MSEgraph)
 
 # ---- Get time-series data.frames ----
 
-get_SSB(Hist1)
-get_SSB(MSE1)
-get_SSB(HistList)
-get_SSB(MSEList)
 
+# ---- Spawning Biomass ----
+get_SSB(Hist1) %>% head()
+get_SSB(Hist1) %>% tail()
+
+get_SSB(MSE1) %>% head()
+get_SSB(MSE1) %>% tail()
+
+get_SSB(HistList) %>% head()
+get_SSB(HistList) %>% tail()
+
+get_SSB(MSEList) %>% head()
+get_SSB(MSEList) %>% tail()
+
+get_SSB(multiHist) %>% head()
+get_SSB(multiHist) %>% tail()
+
+# use a custom function to scale Value
 divide_1000 <- function(x) x/1000
 get_SSB(multiHist, scale=divide_1000)
 
+# ---- Biomass ----
 get_Biomass(Hist1)
 get_Biomass(MSE1)
 get_Biomass(HistList)
 get_Biomass(MSEList)
-
 get_Biomass(multiHist)
 
+# ---- Landings ----
 get_Landings(Hist1)
 get_Landings(MSE1)
 get_Landings(HistList)
 get_Landings(MSEList)
+get_Landings(multiHist)
 
+# ---- Removals ----
 get_Removals(Hist1)
 get_Removals(MSE1)
 get_Removals(HistList)
 get_Removals(MSEList)
-
 get_Removals(multiHist)
 
-
+# ---- Recruits ----
 get_Recruits(Hist1)
 get_Recruits(HistList)
-get_Recruits(MSE1) # doesn't work yet - requires latest version of MSEtool
-get_Recruits(MSEList) # doesn't work yet - requires latest version of MSEtool
+
+# to do
+get_Recruits(MSE1)
+get_Recruits(MSEList)
+
+# ---- Assessment Estimates ----
+get_assess_estimates(MSE1) %>% head()
+get_assess_estimates(MSE1) %>% tail()
+
+get_assess_estimates(MSEList) %>% head()
+get_assess_estimates(MSEList) %>% tail()
+
+assess_estimates <- get_assess_estimates(MSE1)
+assess_estimates$variable %>% unique()
+
+# ---- Time-Series by Age ----
+# Works on Hist, MSE, and multiHist objects
+
+get_at_Age(Hist1)
+get_at_Age(multiHist) %>% head()
+get_at_Age(multiHist) %>% tail()
 
 
-get_at_Age <- function(x, model='Model 1') {
-  UseMethod("get_at_Age")
-}
 
-#' @export
-#' @rdname get_ts
-get_at_Age.Hist <- function(x, model='Model 1') {
-
-  Vars <- c('Length', 'Weight', 'Select', 'Retention',
-            'Maturity', 'N.Mortality', 'Z.Mortality', 'F.Mortality',
-            'Number')
-  years <- get_years(x)
-  nage <- length(x@AtAge$Length[1,,1])
-  Ages <- 0:(nage-1)
-
-  df_out <- data.frame(Year=rep(years$Year, each=nage),
-                       Age=Ages,
-                       Model=model)
-  for (i in seq_along(Vars)) {
-    var <- Vars[i]
-    dd <- dim(x@AtAge[[var]])
-    if (length(dd)==3) {
-      df_out[[var]] <- as.vector(x@AtAge[[var]][1,,])
-    } else {
-      df_out[[var]] <- as.vector(x@AtAge[[var]][1,,,1])
-    }
-  }
-  df_out
-
-}
-get_at_Age.Hist(Hist1)
-
-
+# ---- Plots ------
 
 p <- plot_SSB(Hist1, print=FALSE)
 p$plot
@@ -112,6 +122,7 @@ plot_SSB(HistList)
 plot_SSB(HistList, facet=FALSE)
 
 plot_SSB(multiHist)
+plot_SSB(multiHist, facet=FALSE)
 
 
 plot_SSB(MSE1)
@@ -144,6 +155,7 @@ plot_Removals(MSE1)
 plot_Removals(MSEList)
 
 plot_Removals(multiHist)
+
 
 # Recruits
 
