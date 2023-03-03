@@ -1,7 +1,336 @@
 
+#' Create a data.frame with estimated values from a `SAMtool` assessment method
+#' used in an MSE
+#'
+#' @param x An object of class `MSE` or a list of `MSE` objects, where
+#' `MSE` includes management procedures that use `SAMtool` stock assessment
+#' functions that return estimated values in `MSE@PPD`.
+#' @template model-parameter
+#'
+#' @return A data.frame with columns:\tabular{ll}{
+#'   \code{Year_assess} \tab The year the assessment was run in the MSE \cr
+#'   \code{Year_est} \tab The year corresponding with the estimated value \cr
+#'   \code{Variable} \tab The estimated variable \cr
+#'   \code{Value} \tab The estimated value \cr
+#'   \code{MP} \tab The name of the management procedure \cr
+#'   \code{Simulation} \tab The simulation number \cr
+#'   \code{Model} \tab The name of model \cr
+#' }
+#'
+#' @export
+#'
+get_assess_estimates <- function(x, model='Model 1') {
+  UseMethod('get_assess_estimates')
+}
+
+get_assess_estimates.MSE.MP <- function(mp, MSE, model='Model 1') {
+  lapply(1:MSE@nsim, function(x) {
+    if (!is.null(MSE@PPD[[mp]]@Misc[[x]]$Assessment_report)) {
+      MSE@PPD[[mp]]@Misc[[x]]$Assessment_report %>%
+        mutate(MP = MSE@MPs[mp], Simulation = x, Model=model) %>%
+        rename(Variable=variable, Value=value)
+    }
+  })
+}
+
+#' @export
+#' @rdname get_assess_estimates
+get_assess_estimates.MSE <- function(x, model='Model 1') {
+  lapply(1:x@nMPs, get_assess_estimates.MSE.MP, MSE=x, model=model) %>%
+    bind_rows()
+}
+
+#' @export
+#' @rdname get_assess_estimates
+get_assess_estimates.list <- function(x) {
+  x <- check_names(x)
+  purrr::map2(x, names(x), get_assess_estimates.MSE) %>%
+    purrr::list_rbind()
+}
+
+
+#' Create a data.frame with at-age schedules by simulation and year
+#'
+#' @template x-parameter
+#' @template model-parameter
+#'
+#' @return
+#' @export
+#'
+get_at_age <- function(x, model='Model 1') {
+  UseMethod("get_at_age")
+}
+
+#' @export
+#' @rdname get_at_age
+get_at_age.Hist <- function(x, model='Model 1') {
+
+  Vars <- c('Length', 'Weight', 'Select', 'Retention', 'Maturity', 'N.Mortality')
+  metadata <- get_metadata(x)
+  years <- metadata$All.Years
+  nsim <- metadata$nsim
+  nage <- metadata$nage
+  Ages <- metadata$Ages
+  df_out <- data.frame(Year=rep(years$Year, each=nsim*nage),
+                       Sim=1:nsim,
+                       Age=rep(Ages, each=nsim),
+                       Period=years$Period,
+                       Model=model)
+
+  for (i in seq_along(Vars)) {
+    var <- Vars[i]
+    df_out[[var]] <- as.vector(x@AtAge[[var]])
+  }
+  df_out %>% tidyr::pivot_longer(., cols=all_of(Vars),
+                                 names_to='Variable',
+                                 values_to='Value')
+}
+
+#' @export
+#' @rdname get_at_age
+get_at_age.MSE <- function(x, model='Model 1') {
+  get_at_age(x@Hist, model=model)
+}
+
+#' @export
+#' @rdname get_at_age
+get_at_age.list <- function(x, model='Model 1') {
+  x <- check_names(x)
+  purrr::map2(x, names(x), get_at_age) %>%
+    purrr::list_rbind()
+}
+
+#' @export
+#' @rdname get_at_age
+get_at_age.multiHist <- function(x, model='Model 1') {
+
+  n_stocks <- length(x)
+  stock_names <- names(x)
+  n_fleets <- length(x[[1]])
+  fleet_names <- names(x[[1]])
+
+  stock_list <- list()
+  for (st in 1:n_stocks) {
+    stock_list[[st]] <- list()
+    for (fl in 1:n_fleets) {
+      df_out <- get_at_age.Hist(x[[st]][[fl]])
+      df_out$Stock <- stock_names[st]
+      df_out$Fleet <- fleet_names[fl]
+      stock_list[[st]][[fl]] <- df_out
+    }
+    stock_list[[st]] <- purrr::list_rbind(stock_list[[st]])
+  }
+  do.call('rbind',stock_list)
+}
+
+
+#' Create a data.frame with time-series information by simulation and year
+#'
+#' @template x-parameter
+#' @param variable A character string with a valid name for a time-series variable.
+#' Use `valid_ts_variables()` for valid variable names.
+#' @template model-parameter
+#' @template scale-parameter
+#'
+#' @export
+get_ts <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) {
+  UseMethod("get_ts")
+}
+
+#' @rdname get_ts
+#' @export
+valid_ts_variables <- function() {
+  unique(TS_Variables$Variable)
+}
+
+match_ts_variable <- function(variable='Spawning Biomass', class='Hist') {
+  if (!variable %in%  TS_Variables$Variable)
+    stop('Not a valid time-series variable. See `valid_ts_variables()`')
+  out <- TS_Variables %>% filter(Variable %in% variable, Class==class)
+  out$Slot
+}
+
+
+#' @export
+#' @rdname get_ts
+get_ts.Hist <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) {
+  slot <- match_ts_variable(variable, 'Hist')
+  if (grepl('\\()', slot)) {
+    fn <- gsub('\\()','', slot)
+    value <- get(fn)(x)
+  } else {
+    value <- as.vector(apply(x@TSdata[[slot]], 1:2, sum))
+  }
+  if (!is.null(scale) & inherits(scale, 'function')) {
+    value <- scale(value)
+  }
+
+  metadata <- get_metadata(x)
+  years <- get_years(x) %>% filter(Period=='Historical')
+  dd <- dim(x@TSdata$Number)
+  nsim <- dd[1]
+  data.frame(Year=rep(years$Year, each=nsim),
+             Sim=1:nsim,
+             Value=value,
+             Variable=variable,
+             Period=years$Period,
+             Model=model)
+}
+
+
+#' @export
+#' @rdname get_ts
+get_ts.MSE <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) {
+  slot <- match_ts_variable(variable, 'MSE')
+  metadata <- get_metadata(x)
+  nsim <- x@nsim
+  nMPs <- x@nMPs
+  MPs <- x@MPs
+
+  hist_df <- get_ts(x@Hist, variable=variable, model=model, scale=scale) %>%
+    add_MPs(., MPs)
+
+  proj.years <- get_years(x) %>% filter(Period=='Projection')
+  pyears <- length(proj.years)
+
+  value <- as.vector(slot(x, slot))
+  if (!is.null(scale) & inherits(scale, 'function')) {
+    value <- scale(value)
+  }
+
+  proj_df <- data.frame(Year=rep(proj.years$Year, each=nsim*nMPs),
+                        Sim=1:nsim,
+                        MP=rep(MPs,each=nsim),
+                        Value=value,
+                        Period=proj.years$Period,
+                        Model=model,
+                        Variable=variable)
+
+  bind_rows(hist_df, proj_df)
+
+}
+
+#' @export
+#' @rdname get_ts
+get_ts.list <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) {
+  if (inherits(x,'multiHist')) {
+    return(get_ts.multiHist(x, variable=variable, model=model, scale=scale))
+  }
+
+  x <- check_names(x)
+  purrr::map2(x, names(x), get_ts, variable=variable, scale=scale) %>%
+    purrr::list_rbind()
+}
+
+
+
+
+
+
+
+
+
+
+#' @export
+#' @rdname get_SSB
+get_Biomass <- function(x, model='Model 1', ...) {
+  get_ts(x, variable='Biomass', model=model, ...)
+}
+
+
+
+
+
+#' Extract the meta-data from a `Hist` or `MSE` object
+#'
+#' @template x-parameter
+#'
+#' @details If `x` is a list of objects, each object must
+#' have identical structure, i.e., same number of simulations,
+#' same number of age-classes, historical and projection years,
+#' management procedures, etc
+#' @return A named list with elements:\tabular{ll}{
+#'   \code{nsim} \tab The number of simulations \cr
+#'   \code{nage} \tab The number of age classes \cr
+#'   \code{Ages} \tab The age classes \cr
+#'   \code{nyear} \tab The number of historical years \cr
+#'   \code{Hist.Years} \tab A data.frame with the historical years in the `Year` column \cr
+#'   \code{proyears} \tab The number of projection years \cr
+#'   \code{Pro.Years} \tab A data.frame with the projection years in the `Year` column \cr
+#'   \code{All.Years} \tab A data.frame with the historical and the projection years in the `Year` column \cr
+#'   \code{nMPs} \tab The number of MPs (if `x` is an object of class `MSE`) \cr
+#'   \code{MPs} \tab The MPs (if `x` is an object of class `MSE`) \cr
+#' }
+#' @export
+#'
+get_metadata <- function(x) {
+  UseMethod("get_metadata")
+}
+
+#' @export
+#' @rdname get_metadata
+get_metadata.Hist <- function(x) {
+  years <- get_years(x)
+  dd <- dim(x@AtAge$Select)
+  nsim <- dd[1]
+  nage <- dd[2]
+  nyear <- dd[3]
+  Ages <- 0:(nage-1)
+
+  out <- list()
+  out$nsim <- nsim
+  out$nage <- nage
+  out$Ages <- Ages
+  out$nyear <- nyear
+  hist.years <- years %>% filter(Period=='Historical')
+  out$Hist.Years <- hist.years
+  pro.years <- years %>% filter(Period=='Historical')
+  out$proyears <- length(pro.years$Year)
+  out$Pro.Years <- pro.years
+  out$All.Years <- years
+  out
+}
+
+
+#' @export
+#' @rdname get_metadata
+get_metadata.MSE <- function(x) {
+  years <- get_years(x)
+  out <- list()
+  out$nsim <- x@nsim
+  out$nage <- x@N %>% dim()
+  out$Ages <- Ages
+  out$nyear <- x@nyears
+  hist.years <- years %>% filter(Period=='Historical')
+  out$Hist.Years <- hist.years
+  pro.years <- years %>% filter(Period=='Historical')
+  out$proyears <- length(pro.years$Year)
+  out$Pro.Years <- pro.years
+  out$All.Years <- years
+  out$nMPs <- x@nMPs
+  out$MPs <- x@MPs
+  out
+}
+
+#' @export
+#' @rdname get_metadata
+get_metadata.list <- function(x) {
+  list <- purrr::map(x,  get_metadata)
+  identicalValue <- function(x,y) if (identical(x,y)) x else FALSE
+  out <- Reduce(identicalValue,list)
+  if (inherits(out, 'logical'))
+    stop('Objects in list `x` do not have identical structure. Are `nsim`, `MPs` etc the same for all objects?')
+  out
+}
+
+
+
+
+
+
 #' Create a data.frame with Historical and Projection years
 #'
-#' @param x An object of class `Hist`, `MSE`, `multiHist`, or `MMSE`
+#' @template x-parameter
 #'
 #' @return A data.frame with years and period (Historical or Projection)
 #' @export
@@ -64,23 +393,10 @@ hist.recruits <- function(x) {
 }
 
 
-#' @rdname get_ts
-#' @export
-valid_ts_variables <- function() {
-  unique(TS_Variables$Variable)
-}
 
 
 
-#' @param class
-#' @export
-#' @rdname get_ts
-match_ts_variable <- function(variable='Spawning Biomass', class='Hist') {
-  if (!variable %in%  TS_Variables$Variable)
-    stop('Not a valid time-series variable. See `valid_ts_variables()`')
-  out <- TS_Variables %>% filter(Variable %in% variable, Class==class)
-  out$Slot
-}
+
 
 
 add_MPs <- function(hist_df, MPs) {
@@ -93,42 +409,9 @@ add_MPs <- function(hist_df, MPs) {
 }
 
 
-#' Title
-#'
-#' @param x
-#'
-#' @param variable
-#' @param model
-#'
-#' @export
-get_ts <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) {
-  UseMethod("get_ts")
-}
 
-#' @export
-#' @rdname get_ts
-get_ts.Hist <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) {
-  slot <- match_ts_variable(variable, 'Hist')
-  if (grepl('\\()', slot)) {
-    fn <- gsub('\\()','', slot)
-    value <- get(fn)(x)
-  } else {
-    value <- as.vector(apply(x@TSdata[[slot]], 1:2, sum))
-  }
-  if (!is.null(scale) & inherits(scale, 'function')) {
-     value <- scale(value)
-  }
 
-  years <- get_years(x) %>% filter(Period=='Historical')
-  dd <- dim(x@TSdata$Number)
-  nsim <- dd[1]
-  data.frame(Year=rep(years$Year, each=nsim),
-             Sim=1:nsim,
-             Value=value,
-             Variable=variable,
-             Period=years$Period,
-             Model=model)
-}
+
 
 #' @export
 #' @rdname get_ts
@@ -198,48 +481,7 @@ get_ts.multiHist <- function(x, variable='Spawning Biomass', model='Model 1', sc
 
 
 
-#' @export
-#' @rdname get_ts
-get_ts.MSE <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) {
-  slot <- match_ts_variable(variable, 'MSE')
-  nsim <- x@nsim
-  nMPs <- x@nMPs
-  MPs <- x@MPs
 
-  hist_df <- get_ts(x@Hist, variable=variable, model=model, scale=scale) %>%
-    add_MPs(., MPs)
-
-  proj.years <- get_years(x) %>% filter(Period=='Projection')
-  pyears <- length(proj.years)
-
-  value <- as.vector(slot(x, slot))
-  if (!is.null(scale) & inherits(scale, 'function')) {
-    value <- scale(value)
-  }
-
-  proj_df <- data.frame(Year=rep(proj.years$Year, each=nsim*nMPs),
-             Sim=1:nsim,
-             MP=rep(MPs,each=nsim),
-             Value=value,
-             Period=proj.years$Period,
-             Model=model,
-             Variable=variable)
-
-  bind_rows(hist_df, proj_df)
-
-}
-
-#' @export
-#' @rdname get_ts
-get_ts.list <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) {
-  if (inherits(x,'multiHist')) {
-    return(get_ts.multiHist(x, variable=variable, model=model, scale=scale))
-  }
-
-  x <- check_names(x)
-  purrr::map2(x, names(x), get_ts, variable=variable, scale=scale) %>%
-    purrr::list_rbind()
-}
 
 
 
@@ -290,120 +532,8 @@ check_names <- function(x) {
 }
 
 
-#' Title
-#'
-#' @param x
-#' @param ...
-#'
-#' @return
-#' @export
-#'
-#' @examples
-get_assess_estimates <- function(x, ...) {
-  UseMethod('get_assess_estimates')
-}
-
-#' @export
-#' @rdname get_assess_estimates
-get_assess_estimates.MSE <- function(x, model='Model 1') {
-  lapply(1:x@nMPs, get_assess_estimates.MSE.MP, MSE=x, model=model) %>%
-    bind_rows()
-}
-
-get_assess_estimates.MSE.MP <- function(mp, MSE, model='Model 1') {
-  lapply(1:MSE@nsim, function(x) {
-    if (!is.null(MSE@PPD[[mp]]@Misc[[x]]$Assessment_report)) {
-      MSE@PPD[[mp]]@Misc[[x]]$Assessment_report %>%
-        mutate(MP = MSE@MPs[mp], Simulation = x, Model=model)
-    }
-
-  })
-}
-
-#' @export
-#' @rdname get_assess_estimates
-get_assess_estimates.list <- function(x) {
-  x <- check_names(x)
-  purrr::map2(x, names(x), get_assess_estimates.MSE) %>%
-    purrr::list_rbind()
-}
 
 
-#' Title
-#'
-#' @param x
-#' @param model
-#'
-#' @return
-#' @export
-#'
-#' @examples
-get_at_Age <- function(x, model='Model 1') {
-  UseMethod("get_at_Age")
-}
-
-#' @export
-#' @rdname get_at_Age
-get_at_Age.Hist <- function(x, model='Model 1') {
-
-  Vars <- c('Length', 'Weight', 'Select', 'Retention', 'Maturity', 'N.Mortality')
-  years <- get_years(x)
-  dd <- dim(x@AtAge$Select)
-  nsim <- dd[1]
-  nage <- dd[2]
-  nyear <- dd[3]
-  Ages <- 0:(nage-1)
-
-  df_out <- data.frame(Year=rep(years$Year, each=nsim*nage),
-                       Sim=1:nsim,
-                       Age=rep(Ages, each=nsim),
-                       Period=years$Period,
-                       Model=model)
-
-  for (i in seq_along(Vars)) {
-    var <- Vars[i]
-    df_out[[var]] <- as.vector(x@AtAge[[var]])
-  }
-  df_out
-}
-
-#' @export
-#' @rdname get_at_Age
-get_at_Age.list <- function(x, model='Model 1') {
-  x <- check_names(x)
-  purrr::map2(x, names(x), get_at_Age) %>%
-    purrr::list_rbind()
-}
-
-#' @export
-#' @rdname get_at_Age
-get_at_Age.multiHist <- function(x, model='Model 1') {
-
-  n_stocks <- length(x)
-  stock_names <- names(x)
-  n_fleets <- length(x[[1]])
-  fleet_names <- names(x[[1]])
-
-  stock_list <- list()
-  for (st in 1:n_stocks) {
-    stock_list[[st]] <- list()
-    for (fl in 1:n_fleets) {
-      df_out <- get_at_Age.Hist(x[[st]][[fl]])
-      df_out$Stock <- stock_names[st]
-      df_out$Fleet <- fleet_names[fl]
-      stock_list[[st]][[fl]] <- df_out
-    }
-    stock_list[[st]] <- purrr::list_rbind(stock_list[[st]])
-  }
-  do.call('rbind',stock_list)
-}
-
-#' @export
-#' @rdname get_at_Age
-get_at_Age.MSE <- function(x, model='Model 1') {
-  get_at_Age(x@Hist, model=model)
-
-}
 
 
 #' Title

@@ -25,23 +25,37 @@
 # - Assessment
 # - MMSE
 
-# Load some Hist and MSE objects for development
-test.objects <- readRDS('test-objects.rda')
-Hist1 <- test.objects$Hist1
-Hist2 <- test.objects$Hist2
-MSE1 <- test.objects$MSE1
-MSE2 <- test.objects$MSE2
-HistList <- test.objects$HistList
-MSEList <- test.objects$MSEList
-multiHist <- test.objects$multiHist
 
-# Everything below uses only MSEgraph package (and dependencies)
 library(MSEgraph)
 
-# ---- Get time-series data.frames ----
+# Get Time-Series Data.Frames ----
+
+## Assessment Estimates ----
 
 
-# ---- Spawning Biomass ----
+get_assess_estimates(MSE1) %>% head()
+get_assess_estimates(MSE1) %>% tail()
+
+get_assess_estimates(MSEList) %>% head()
+get_assess_estimates(MSEList) %>% tail()
+
+assess_estimates <- get_assess_estimates(MSE1)
+assess_estimates$variable %>% unique()
+
+## At-Age Schedules by Year ----
+get_at_Age(Hist1)
+get_at_Age(HistList) %>% head()
+get_at_Age(HistList) %>% tail()
+
+get_at_Age(MSE1)
+
+get_at_Age(MSEList) %>% head()
+get_at_Age(MSEList) %>% tail()
+
+
+
+
+## Spawning Biomass ----
 get_SSB(Hist1) %>% head()
 get_SSB(Hist1) %>% tail()
 
@@ -55,7 +69,7 @@ get_SSB(MSEList) %>% head()
 get_SSB(MSEList) %>% tail()
 
 # use a custom function to scale Value
-divide_1000 <- function(x) x/1000
+
 get_SSB(MSEList, scale=divide_1000)
 
 
@@ -88,27 +102,7 @@ get_Recruits(HistList)
 get_Recruits(MSE1)
 get_Recruits(MSEList)
 
-# ---- Assessment Estimates ----
-get_assess_estimates(MSE1) %>% head()
-get_assess_estimates(MSE1) %>% tail()
 
-get_assess_estimates(MSEList) %>% head()
-get_assess_estimates(MSEList) %>% tail()
-
-assess_estimates <- get_assess_estimates(MSE1)
-assess_estimates$variable %>% unique()
-
-# ---- At-Age Schedules by Year ----
-# Works on Hist, MSE, and multiHist objects
-
-get_at_Age(Hist1)
-get_at_Age(HistList) %>% head()
-get_at_Age(HistList) %>% tail()
-
-get_at_Age(MSE1)
-
-get_at_Age(MSEList) %>% head()
-get_at_Age(MSEList) %>% tail()
 
 
 

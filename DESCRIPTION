@@ -1,16 +1,18 @@
 Package: MSEgraph
-Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: MSEgraph: Plots and Other Useful Functions for the openMSE packages
+Version: 0.0.0.9000
+Authors@R: 
+    person("Adrian", "Hordyk", , "adrian@bluematterscience.com", 
+    role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0001-5620-3446"))
+Description: A collection of functions for extracting information from `openMSE`
+    objects and arranging into standardized data frames, and a series of generic plotting routines for 
+    generating publication-quality figures.
+License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
-Depends: 
-    ggplot2,
-    dplyr,
-    R (>= 2.10)
+Depends:
+    R (>= 2.15),
+    dplyr
+LazyData: true

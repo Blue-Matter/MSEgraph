@@ -16,7 +16,7 @@ get_years(x)
 \method{get_years}{multiHist}(x)
 }
 \arguments{
-\item{x}{An object of class `Hist`, `MSE`, `multiHist`, or `MMSE`}
+\item{x}{An object of class \code{Hist}, \code{MSE}, or a list of \code{Hist} or \code{MSE} objects}
 }
 \value{
 A data.frame with years and period (Historical or Projection)
