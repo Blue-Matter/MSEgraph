@@ -8,6 +8,7 @@
 # TODO:
 # - MSEtool: Hist object should always be included in MSE object
 
+
 # Functions:
 # get_ - return data.frames with time-series information
 # plot_ - plot the data.frames
@@ -15,98 +16,95 @@
 # Object classes:
 # - Hist
 # - MSE
-# - multiHist - incomplete
 # - list(Hist, Hist, ...) # list of Hist objects
 # - list(MSE, MSE, ...) # list of MSE objects
 # - PPD@Misc - Assessment_report
 
 # Not done yet:
+# - multiHist - incomplete
+# - MMSE
 # - RCM
 # - Assessment
-# - MMSE
+
 
 
 library(MSEgraph)
 
-# Get Time-Series Data.Frames ----
+# Get information from objects ----
+
+## Meta-data ----
+get_Years(Hist1) %>% head()
+get_Years(MSE1) %>% head()
+
+get_Metadata(Hist1) %>% names()
+get_Metadata(HistList) %>% names()
+
+get_Metadata(MSE1) %>% names()
+get_Metadata(MSEList) %>% names()
 
 ## Assessment Estimates ----
+# for MSE objects that have SAMtool assessment MPs
+# requires SAMtool v1.5.1 or later
+get_Assess_Estimates(MSE1) %>% head()
+get_Assess_Estimates(MSE1) %>% tail()
 
+get_Assess_Estimates(MSEList) %>% head()
+get_Assess_Estimates(MSEList) %>% tail()
 
-get_assess_estimates(MSE1) %>% head()
-get_assess_estimates(MSE1) %>% tail()
-
-get_assess_estimates(MSEList) %>% head()
-get_assess_estimates(MSEList) %>% tail()
-
-assess_estimates <- get_assess_estimates(MSE1)
-assess_estimates$variable %>% unique()
+assess_estimates <- get_Assess_Estimates(MSE1)
+# estimated variables returned by SAMtool MPs in `PPD@Misc`
+assess_estimates$Variable %>% unique()
 
 ## At-Age Schedules by Year ----
 get_at_Age(Hist1)
-get_at_Age(HistList) %>% head()
+get_at_Age(HistList)
 get_at_Age(HistList) %>% tail()
 
 get_at_Age(MSE1)
-
-get_at_Age(MSEList) %>% head()
+get_at_Age(MSEList)
 get_at_Age(MSEList) %>% tail()
 
+## Time-Series ----
 
-
-
-## Spawning Biomass ----
-get_SSB(Hist1) %>% head()
-get_SSB(Hist1) %>% tail()
-
-get_SSB(MSE1) %>% head()
-get_SSB(MSE1) %>% tail()
-
-get_SSB(HistList) %>% head()
-get_SSB(HistList) %>% tail()
-
-get_SSB(MSEList) %>% head()
-get_SSB(MSEList) %>% tail()
+### Total Biomass ----
+get_Biomass(Hist1) %>% head()
+get_Biomass(MSE1) %>% head()
+get_Biomass(MSE1) %>% tail()
 
 # use a custom function to scale Value
+get_Biomass(MSE1, scale=divide_1000) %>% head()
 
-get_SSB(MSEList, scale=divide_1000)
+get_Biomass(HistList) %>% head()
+get_Biomass(MSEList) %>% head()
 
+### Spawning Biomass ----
+get_SSB(Hist1) %>% head()
+get_SSB(MSE1) %>% head()
+get_SSB(HistList) %>% head()
+get_SSB(MSEList) %>% head()
 
-# ---- Biomass ----
-get_Biomass(Hist1)
-get_Biomass(MSE1)
-get_Biomass(HistList)
-get_Biomass(MSEList)
+### Landings ----
+get_Landings(Hist1) %>% head()
+get_Landings(MSE1) %>% head()
+get_Landings(HistList) %>% head()
+get_Landings(MSEList) %>% head()
 
-
-# ---- Landings ----
-get_Landings(Hist1)
-get_Landings(MSE1)
-get_Landings(HistList)
-get_Landings(MSEList)
-
-
-# ---- Removals ----
-get_Removals(Hist1)
-get_Removals(MSE1)
-get_Removals(HistList)
-get_Removals(MSEList)
-
-
-# ---- Recruits ----
-get_Recruits(Hist1)
-get_Recruits(HistList)
-
-# TODO - requires update to MSEtool
-get_Recruits(MSE1)
-get_Recruits(MSEList)
+### Removals ----
+get_Removals(Hist1) %>% head()
+get_Removals(MSE1) %>% head()
+get_Removals(HistList) %>% head()
+get_Removals(MSEList) %>% head()
 
 
+### Recruits ----
+get_Recruits(Hist1) %>% head()
+get_Recruits(HistList) %>% head()
 
+# not working yet
+get_Recruits(MSE1) %>% head()
+get_Recruits(MSEList) %>% head()
 
-
-# ---- Life-History Parameters by Year ----
+## Life-History Parameters by Year ----
 
 get_LifeHistory(Hist1)
 get_LifeHistory(MSE1)
@@ -116,13 +114,23 @@ get_LifeHistory(MSEList)
 
 
 
-# ---- Plots ------
+# Plots ------
 
-# ----- Time-Series Plots ----
+## Time-Series Plots ----
 p <- plot_SSB(Hist1, print=FALSE)
 p$plot
 p$df
 
+# Hist - no facet
+# HistList - facet by model
+
+# MSE - facet by MP
+# MSE - no facet
+
+# MSElist - facet by MP and model
+# MSElist - no facet by MP
+
+# up to here - figure out MSE with facet by MP - need to include Historical
 plot_SSB(Hist1)
 plot_SSB(Hist1, facet=FALSE)
 plot_SSB(Hist1, facet=FALSE, inc.Legend=FALSE)

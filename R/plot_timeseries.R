@@ -54,10 +54,97 @@ plot_ts_quants <- function(df,
                            lwd=1,
                            use_theme=NULL,
                            colpalette='Dark2',
-                           print=TRUE,
-                           inc.Hist=FALSE,
                            facet=TRUE,
-                           inc.Legend=!facet) {
+                           inc.Legend=!facet,
+                           inc.Hist=FALSE,
+                           print=TRUE) {
+
+  nmodel <- df$Model %>% unique() %>% length()
+  multi_model <- ifelse(nmodel>1, TRUE, FALSE)
+  hist_only <- all(df$Period == 'Historical')
+
+  # Hist
+  # no facet, no legend
+  if (!multi_model & hist_only)
+    p <- plot_ts_hist(df, xlab, ylab, title, alpha, lwd) +
+    guides(color='none', fill='none')
+
+  # HistList (multi-model)
+  if (multi_model & hist_only) {
+    if (!facet) {
+      p <- plot_ts_hist(df, xlab, ylab, title, alpha, lwd)
+    } else {
+      p <- plot_ts_hist(df, xlab, ylab, title, alpha, lwd) +
+      facet_wrap(~Model)
+    }
+    if (!inc.Legend)
+      p <- p + guides(color='none', fill='none')
+  }
+
+  if (!multi_model & !hist_only) {
+    p <- plot_ts_proj(df, xlab, ylab, title, alpha, lwd, inc.Hist)
+
+    if (facet) {
+      p <- p + facet_wrap(~MP)
+    }
+    p
+  }
+
+  p
+
+
+  x <- MSE1
+  df <- summary_df(x, quantiles=quantiles, get_SSB, scale=scale)
+
+
+  plot_ts_hist <- function(df, xlab, ylab, title, alpha, lwd) {
+    # no facet and no legend
+    if (is.null(ylab))
+      ylab <- unique(df$Variable)
+    p <- ggplot(df, aes(x=Year, y=Median, ymin=Lower, ymax=Upper))+
+      geom_ribbon(alpha=alpha, aes(fill=Model)) +
+      geom_line(linewidth=lwd, aes(color=Model)) +
+      labs(x = xlab, y = ylab, title= title) +
+      scale_fill_brewer(palette=colpalette) +
+      scale_color_brewer(palette=colpalette) +
+      expand_limits(y=0) +
+      guides(color='none', fill='none')
+    p
+  }
+
+  plot_ts_proj <- function(df, xlab, ylab, title, alpha, lwd, inc.Hist) {
+    if (is.null(ylab))
+      ylab <- unique(df$Variable)
+
+    if (inc.Hist) {
+      mplevels <- unique(df$MP)
+      mplevels <- mplevels[!is.na(mplevels)]
+      mplevels <- c(mplevels, 'Historical')
+      df$MP[df$Period=='Historical'] <- 'Historical'
+      df$MP <- factor(df$MP, ordered = TRUE, levels=mplevels)
+    }
+    p <- ggplot(df, aes(x=Year, y=Median, ymin=Lower, ymax=Upper)) +
+      geom_ribbon(alpha=alpha, aes(fill=MP)) +
+      geom_line(linewidth=lwd, aes(color=MP)) +
+      labs(x = xlab, y = ylab, title= title) +
+      scale_fill_brewer(palette=colpalette) +
+      scale_color_brewer(palette=colpalette) +
+      expand_limits(y=0)
+    p
+  }
+
+
+  # MSE
+
+  # MSElist (multi-model)
+
+  if (is.null(use_theme)) {
+    p <- p + theme_default()
+  } else {
+    p <- p + use_theme()
+  }
+
+
 
   n_scens <- length(unique(df$Model))
   n_variables <- length(unique(df$Variable))
@@ -72,8 +159,7 @@ plot_ts_quants <- function(df,
     facet_wrap(~Variable, scales='free_y')
 
 
-  if (is.null(ylab))
-    ylab <- unique(df$Variable)
+
 
   if (!is.null(df[['MP']])) {
     p <- ggplot(df, aes(x=Year, y=Median, ymin=Lower, ymax=Upper)) +
@@ -129,6 +215,22 @@ plot_ts_quants <- function(df,
   invisible(list(plot=p, df=df))
 }
 
+
+
+plot_ts_Hist <- function(df, xlab, ylab, title, alpha, lwd) {
+  # no facet and no legend
+  if (is.null(ylab))
+    ylab <- unique(df$Variable)
+  p <- ggplot(df, aes(x=Year, y=Median, ymin=Lower, ymax=Upper))+
+    geom_ribbon(alpha=alpha, aes(fill=Model)) +
+    geom_line(linewidth=lwd, aes(color=Model)) +
+    labs(x = xlab, y = ylab, title= title) +
+    scale_fill_brewer(palette=colpalette) +
+    scale_color_brewer(palette=colpalette) +
+    expand_limits(y=0)
+
+  p
+}
 
 
 #' Title

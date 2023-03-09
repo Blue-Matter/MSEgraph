@@ -3,26 +3,38 @@
 \name{get_ts}
 \alias{get_ts}
 \alias{valid_ts_variables}
-\alias{match_ts_variable}
 \alias{get_ts.Hist}
-\alias{get_ts.multiHist}
 \alias{get_ts.MSE}
 \alias{get_ts.list}
+\alias{get_Biomass}
+\alias{get_Landings}
+\alias{get_Removals}
+\alias{get_Recruits}
+\alias{get_SSB}
+\alias{get_ts.multiHist}
 \title{Create a data.frame with time-series information by simulation and year}
 \usage{
 get_ts(x, variable = "Spawning Biomass", model = "Model 1", scale = NULL)
 
 valid_ts_variables()
 
-match_ts_variable(variable = "Spawning Biomass", class = "Hist")
-
 \method{get_ts}{Hist}(x, variable = "Spawning Biomass", model = "Model 1", scale = NULL)
-
-\method{get_ts}{multiHist}(x, variable = "Spawning Biomass", model = "Model 1", scale = NULL)
 
 \method{get_ts}{MSE}(x, variable = "Spawning Biomass", model = "Model 1", scale = NULL)
 
 \method{get_ts}{list}(x, variable = "Spawning Biomass", model = "Model 1", scale = NULL)
+
+get_Biomass(x, model = "Model 1", ...)
+
+get_Landings(x, model = "Model 1", ...)
+
+get_Removals(x, model = "Model 1", ...)
+
+get_Recruits(x, model = "Model 1", ...)
+
+get_SSB(x, model = "Model 1", ...)
+
+\method{get_ts}{multiHist}(x, variable = "Spawning Biomass", model = "Model 1", scale = NULL)
 }
 \arguments{
 \item{x}{An object of class \code{Hist}, \code{MSE}, or a list of \code{Hist} or \code{MSE} objects}
@@ -34,7 +46,7 @@ Use \code{valid_ts_variables()} for valid variable names.}
 If \code{x} is a list of objects, \code{model} will be taken from \code{names(x)}.
 If \code{names(x)} is \code{NULL}, \code{model} will be given sequential numerical values (e.g., \verb{Model 1}, \verb{Model 2}, ...)}
 
-\item{scale}{An optional function that scales the values in \code{Values}. See \code{lb2kg} and \code{kg2lb} for example.}
+\item{scale}{An optional function with a single numeric argument that returns transformed or scaled numeric values. See \code{lb2kg} and \code{kg2lb} for example.}
 }
 \description{
 Create a data.frame with time-series information by simulation and year
