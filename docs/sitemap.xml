@@ -40,7 +40,40 @@
     <loc>/reference/hello.html</loc>
   </url>
   <url>
+    <loc>/reference/Hist1.html</loc>
+  </url>
+  <url>
+    <loc>/reference/Hist2.html</loc>
+  </url>
+  <url>
+    <loc>/reference/Hist3.html</loc>
+  </url>
+  <url>
+    <loc>/reference/Hist4.html</loc>
+  </url>
+  <url>
+    <loc>/reference/HistList.html</loc>
+  </url>
+  <url>
     <loc>/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>/reference/MSE1.html</loc>
+  </url>
+  <url>
+    <loc>/reference/MSE2.html</loc>
+  </url>
+  <url>
+    <loc>/reference/MSE3.html</loc>
+  </url>
+  <url>
+    <loc>/reference/MSE4.html</loc>
+  </url>
+  <url>
+    <loc>/reference/MSEList.html</loc>
+  </url>
+  <url>
+    <loc>/reference/plot_at_Age.html</loc>
   </url>
   <url>
     <loc>/reference/plot_Biomass.html</loc>
@@ -58,6 +91,9 @@
     <loc>/reference/plot_SSB.html</loc>
   </url>
   <url>
+    <loc>/reference/plot_TS.html</loc>
+  </url>
+  <url>
     <loc>/reference/plot_ts_quants.html</loc>
   </url>
   <url>
@@ -65,5 +101,8 @@
   </url>
   <url>
     <loc>/reference/theme_default.html</loc>
+  </url>
+  <url>
+    <loc>/reference/TS_Variables.html</loc>
   </url>
 </urlset>

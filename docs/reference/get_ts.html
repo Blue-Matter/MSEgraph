@@ -48,18 +48,26 @@
 <span></span>
 <span><span class="fu">valid_ts_variables</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">match_ts_variable</span><span class="op">(</span>variable <span class="op">=</span> <span class="st">"Spawning Biomass"</span>, class <span class="op">=</span> <span class="st">"Hist"</span><span class="op">)</span></span>
-<span></span>
 <span><span class="co"># S3 method for Hist</span></span>
-<span><span class="fu">get_ts</span><span class="op">(</span><span class="va">x</span>, variable <span class="op">=</span> <span class="st">"Spawning Biomass"</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, scale <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S3 method for multiHist</span></span>
 <span><span class="fu">get_ts</span><span class="op">(</span><span class="va">x</span>, variable <span class="op">=</span> <span class="st">"Spawning Biomass"</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, scale <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for MSE</span></span>
 <span><span class="fu">get_ts</span><span class="op">(</span><span class="va">x</span>, variable <span class="op">=</span> <span class="st">"Spawning Biomass"</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, scale <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for list</span></span>
+<span><span class="fu">get_ts</span><span class="op">(</span><span class="va">x</span>, variable <span class="op">=</span> <span class="st">"Spawning Biomass"</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, scale <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">get_Biomass</span><span class="op">(</span><span class="va">x</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">get_Landings</span><span class="op">(</span><span class="va">x</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">get_Removals</span><span class="op">(</span><span class="va">x</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">get_Recruits</span><span class="op">(</span><span class="va">x</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">get_SSB</span><span class="op">(</span><span class="va">x</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for multiHist</span></span>
 <span><span class="fu">get_ts</span><span class="op">(</span><span class="va">x</span>, variable <span class="op">=</span> <span class="st">"Spawning Biomass"</span>, model <span class="op">=</span> <span class="st">"Model 1"</span>, scale <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -81,7 +89,11 @@ If <code>names(x)</code> is <code>NULL</code>, <code>model</code> will be given 
 
 
 <dt>scale</dt>
-<dd><p>An optional function that scales the values in <code>Values</code>. See <code>lb2kg</code> and <code>kg2lb</code> for example.</p></dd>
+<dd><p>An optional function with a single numeric argument that returns transformed or scaled numeric values. See <code>lb2kg</code> and <code>kg2lb</code> for example.</p></dd>
+
+
+<dt>...</dt>
+<dd><p>named arguments passed to <code>get_ts</code></p></dd>
 
 </dl></div>
 

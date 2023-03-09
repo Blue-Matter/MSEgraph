@@ -21,9 +21,7 @@ You can install the development version of MSEgraph from
 remotes::install_github("Blue-Matter/MSEgraph")
 ```
 
-## Overview
+## Help Documentation
 
-| Name                 | Description                                      | Object                                                                                                                                                                                 |
-|:---------------------|:-------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| get_assess_estimates | Create a data.frame with estimated values from a | An object of class `MSE` or a list of `MSE` objects, where`MSE` includes management procedures that use `SAMtool` stock assessmentfunctions that return estimated values in `MSE@PPD`. |
-| get_LifeHistory      | Title                                            | NA                                                                                                                                                                                     |
+See [here](https://blue-matter.github.io/MSEgraph/reference/index.html)
+for an overview of the functions in this package.

@@ -29,36 +29,5 @@ You can install the development version of MSEgraph from [GitHub](https://github
 remotes::install_github("Blue-Matter/MSEgraph")
 ```
 
-## Overview
-
-```{r make_table, echo=FALSE, results='asis'}
-library(tools)
-library(knitr)
-
-Rd.files <- list.files('man', pattern = '.Rd')
-
-get_object <- function(Rd) {
-  df <- tools:::.Rd_get_argument_table(Rd)
-  txt <- df[match('x', df[,1]),2]
-  txt <- gsub('\\\\code', '', txt)
-  txt <- gsub('\\{', '`', txt)
-  txt <- gsub('\\}', '`', txt)
-  gsub('\\\n', '', txt)
-}
-
-get_info <- function(i, Rd.files) {
-  Rd <- tools::parse_Rd(file.path('man', Rd.files[i]))
-  tags <- tools:::RdTags(Rd)
-  name <- Rd[[which(tags == "\\name")]][[1]]
-  desc <- Rd[[which(tags == "\\title")]][[1]]
-  works_on <- get_object(Rd)
-  data.frame(Name=name,
-             Description=desc,
-             Object=works_on)
-}
-
-df <-purrr::map_df(1:2, get_info, Rd.files=Rd.files)
-
-kable(df)
-
-```
+## Help Documentation
+See [here](https://blue-matter.github.io/MSEgraph/reference/index.html) for an overview of the functions in this package.
