@@ -193,7 +193,7 @@ get_Assess_Estimates.MSE <- function(x, model='Model 1') {
 
 #' @export
 #' @rdname get_Assess_Estimates
-get_Assess_Estimates.list <- function(x) {
+get_Assess_Estimates.list <- function(x, model=NULL) {
   x <- check_names(x)
   purrr::map2(x, names(x), get_Assess_Estimates.MSE) %>%
     purrr::list_rbind()
@@ -203,19 +203,22 @@ get_Assess_Estimates.list <- function(x) {
 
 #' Create a data.frame with at-age schedules by simulation and year
 #'
+#' Note that the Selectivity and Retention curves in these plots are from the operating model. If an MP changes the
+#' selectivity/retention, this is not shown in these plots.
+#'
 #' @template x-parameter
 #' @template model-parameter
-#'
-#' @return
+#' @template scale-parameter
+#' @return A data.frame
 #' @export
 #'
-get_at_Age <- function(x, model='Model 1') {
+get_at_Age <- function(x, model='Model 1', scale) {
   UseMethod("get_at_Age")
 }
 
 #' @export
 #' @rdname get_at_Age
-get_at_Age.Hist <- function(x, model='Model 1') {
+get_at_Age.Hist <- function(x, model='Model 1', scale=NULL) {
 
   Vars <- c('Length', 'Weight', 'Select', 'Retention', 'Maturity', 'N.Mortality')
   metadata <- get_Metadata(x)
@@ -226,16 +229,23 @@ get_at_Age.Hist <- function(x, model='Model 1') {
   df_out <- data.frame(Year=rep(years$Year, each=nsim*nage),
                        Sim=1:nsim,
                        Age=rep(Ages, each=nsim),
-                       Period=years$Period,
+                       Period=rep(years$Period, each=nsim*nage),
                        Model=model)
 
   for (i in seq_along(Vars)) {
     var <- Vars[i]
-    df_out[[var]] <- as.vector(x@AtAge[[var]])
+    value <- as.vector(x@AtAge[[var]])
+    if (!is.null(scale) & inherits(scale, 'function')) {
+      value <- scale(value)
+    }
+
+    df_out[[var]] <- value
   }
   df_out %>% tidyr::pivot_longer(., cols=all_of(Vars),
-                                 names_to='Variable',
-                                 values_to='Value')
+                                           names_to='Variable',
+                                           values_to='Value')
+
+
 }
 
 #' @export
@@ -251,13 +261,17 @@ get_at_Age.MSE <- function(x, model='Model 1') {
   df_out <- data.frame(Year=rep(years$Year, each=nsim*nage),
                        Sim=1:nsim,
                        Age=rep(Ages, each=nsim),
-                       Period=years$Period,
+                       Period=rep(years$Period, each=nsim*nage),
                        Model=model)
 
   x <- x@Hist
   for (i in seq_along(Vars)) {
     var <- Vars[i]
-    df_out[[var]] <- as.vector(x@AtAge[[var]])
+    value <- as.vector(x@AtAge[[var]])
+    if (!is.null(scale) & inherits(scale, 'function')) {
+      value <- scale(value)
+    }
+    df_out[[var]] <- value
   }
   df_out %>% tidyr::pivot_longer(., cols=all_of(Vars),
                                  names_to='Variable',
@@ -305,6 +319,7 @@ get_at_Age.multiHist <- function(x, model='Model 1') {
 #' Use `valid_ts_variables()` for valid variable names.
 #' @template model-parameter
 #' @template scale-parameter
+#' @param ... named arguments passed to `get_ts`
 #'
 #' @export
 get_ts <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) {
@@ -314,13 +329,13 @@ get_ts <- function(x, variable='Spawning Biomass', model='Model 1', scale=NULL) 
 #' @rdname get_ts
 #' @export
 valid_ts_variables <- function() {
-  unique(TS_Variables$Variable)
+  unique(MSEgraph::TS_Variables$Variable)
 }
 
 match_ts_variable <- function(variable='Spawning Biomass', class='Hist') {
-  if (!variable %in%  TS_Variables$Variable)
+  if (!variable %in%  MSEgraph::TS_Variables$Variable)
     stop('Not a valid time-series variable. See `valid_ts_variables()`')
-  out <- TS_Variables %>% filter(Variable %in% variable, Class==class)
+  out <- MSEgraph::TS_Variables %>% filter(Variable %in% variable, Class==class)
   out$Slot
 }
 
@@ -467,14 +482,6 @@ mse.recruits <- function(x) {
 
 
 
-add_MPs <- function(hist_df, MPs) {
-  nMPs <- length(MPs)
-  hist_list <- replicate(nMPs, hist_df, FALSE)
-  for (i in 1:nMPs) {
-    hist_list[[i]]$MP=MPs[i]
-  }
-  do.call('rbind', hist_list)
-}
 
 
 
@@ -572,15 +579,16 @@ check_names <- function(x) {
 
 
 
-#' Title
+#' Get Life History Parameters
 #'
-#' @param x
-#' @param model
+#' Extracts the life-history parameters: `Linf`, `K`, `L50`, and `ageM`
 #'
-#' @return
+#' @template x-parameter
+#' @template model-parameter
+#'
+#' @return A data.frame
 #' @export
-#'
-#' @examples
+
 get_LifeHistory <- function(x, model='Model 1') {
   UseMethod("get_LifeHistory")
 }

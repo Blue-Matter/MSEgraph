@@ -6,7 +6,10 @@
 # MSEs <- readRDS("C:/Users/User/Documents/GitHub/FSERP-herring/MSEs/HG/hMSEs_NF.rda")
 
 # TODO:
-# - MSEtool: Hist object should always be included in MSE object
+# - MSEtool: Hist object should always be included in MSE object - added to dev version of MSEtool
+
+
+
 
 
 # Functions:
@@ -29,6 +32,7 @@
 
 
 library(MSEgraph)
+library(dplyr)
 
 # Get information from objects ----
 
@@ -112,33 +116,24 @@ get_LifeHistory(HistList)
 get_LifeHistory(MSEList)
 
 
-
-
 # Plots ------
 
 ## Time-Series Plots ----
-p <- plot_SSB(Hist1, print=FALSE)
-p$plot
+
+# plot functions return list with `plot` and `df`:
+p <- plot_SSB(Hist1)
+
+# ggplot object:
+p$plot + ggplot2::theme_classic() + ggplot2::labs(title='Test')
+
+# summary data.frame
 p$df
 
-# Hist - no facet
-# HistList - facet by model
-
-# MSE - facet by MP
-# MSE - no facet
-
-# MSElist - facet by MP and model
-# MSElist - no facet by MP
-
-# up to here - figure out MSE with facet by MP - need to include Historical
 plot_SSB(Hist1)
-plot_SSB(Hist1, facet=FALSE)
-plot_SSB(Hist1, facet=FALSE, inc.Legend=FALSE)
+plot_SSB(Hist1, years=1990:2000) # subset the years
+
 plot_SSB(HistList)
 plot_SSB(HistList, facet=FALSE)
-
-plot_SSB(multiHist)
-plot_SSB(multiHist, facet=FALSE)
 
 plot_SSB(MSE1)
 plot_SSB(MSE1, facet=FALSE)
@@ -146,14 +141,17 @@ plot_SSB(MSE1, inc.Hist=TRUE)
 plot_SSB(MSE1, inc.Hist=TRUE, facet=FALSE)
 
 plot_SSB(MSEList)
-plot_SSB(MSEList, inc.Hist=TRUE)
 plot_SSB(MSEList, facet=FALSE)
-plot_SSB(MSEList, facet=FALSE, quantiles=0.5)
+plot_SSB(MSEList, inc.Hist=TRUE)
+plot_SSB(MSEList, inc.Hist=TRUE, facet=FALSE)
+
 
 # median only
 plot_SSB(Hist1, quantiles=0.5)
+plot_SSB(MSE1, quantiles=0.5)
 plot_SSB(MSEList, quantiles=0.5)
 plot_SSB(MSEList, quantiles=0.5, facet=FALSE)
+
 
 plot_Biomass(Hist1)
 plot_Biomass(HistList)
@@ -170,75 +168,57 @@ plot_Removals(HistList)
 plot_Removals(MSE1)
 plot_Removals(MSEList)
 
-plot_Removals(multiHist)
-
 plot_Recruits(Hist1)
-plot_Recruits(MSE1) # todo
+plot_Recruits(MSE1)
 plot_Recruits(HistList)
-plot_Recruits(MSEList) # todo
+plot_Recruits(MSEList)
 
-# revise TS plots for different facet types
-plot_LifeHistory <- function(x,
-                             title='',
-                             xlab='Year',
-                             ylab='Recruits',
-                             quantiles=c(0.025, 0.975),
-                             ...) {
+# Life-History parameters
+plot_LifeHistory(Hist1)
+plot_LifeHistory(HistList)
+plot_LifeHistory(MSE1)
+plot_LifeHistory(MSEList)
 
-  df <- summary_df(x, quantiles=quantiles, get_LifeHistory)
-  plot_ts_quants(df, xlab=xlab, ylab=ylab, title=title, ...)
-
-}
 
 # ---- Plot At-Age Schedules ----
 
+plot_Length(Hist1)
+plot_Length(Hist1, scale=cm2inch, ylab='Length (inch)')
 
+plot_Length(Hist1, years=2000:2010)
+plot_Length(HistList)
+plot_Length(MSE1)
+plot_Length(MSEList)
+plot_Length(MSEList, years=2000:2010)
 
-# Linf
+plot_Weight(Hist1)
+plot_Weight(MSE1)
+plot_Weight(HistList)
+plot_Weight(MSEList)
 
-# K
+plot_Maturity(Hist1)
+plot_Maturity(MSE1)
+plot_Maturity(HistList)
+plot_Maturity(MSEList)
 
-# M
+plot_N.Mortality(Hist1)
+plot_N.Mortality(MSE1)
+plot_N.Mortality(HistList)
+plot_N.Mortality(MSEList)
 
-# L50
+plot_Select(Hist1)
+plot_Select(MSE1)
+plot_Select(HistList)
+plot_Select(MSEList)
 
-# LifeHistory
+plot_Retention(Hist1)
+plot_Retention(MSE1)
+plot_Retention(HistList)
+plot_Retention(MSEList)
 
-
-
-
-
-remotes::install_github("Blue-Matter/SAMtool") # version 1.5.1 or later
-library(tidyverse)
-
-##### Create two SCA MPs with reporting
-SCA_40_10 <- make_MP(SCA, HCR40_10, diagnostic = "full")
-SCA_60_20 <- make_MP(SCA, HCR60_20, diagnostic = "full")
-
-##### Run simulations
-OM <- MSEtool::testOM; OM@proyears <- 20
-myMSE <- MSEtool::runMSE(OM = OM, MPs = c("SCA_40_10", "SCA_60_20"))
-
-##### Plot assessment estimates (F and SSB) inside MP
-retrospective_AM(myMSE, MP = "SCA_40_10", sim = 2)
-
-# How to get all the estimates
-assess_estimates <- lapply(1:myMSE@nMPs, function(m) {
-  lapply(1:myMSE@nsim, function(x) {
-    myMSE@PPD[[m]]@Misc[[x]]$Assessment_report %>%  # Now a list of data frames instead of Assessment objects, saves a lot of space
-      mutate(MP = myMSE@MPs[m], Simulation = x)
-  }) %>% bind_rows()
-}) %>% bind_rows()
-
-##### Convergence diagnostics
-diagnostic(myMSE, MP = "SCA_40_10")
-
-# How to get all the reporting
-conv_statistics <- lapply(1:myMSE@nMPs, function(m) {
-  lapply(1:myMSE@nsim, function(x) {
-    myMSE@PPD[[m]]@Misc[[x]]$diagnostic %>%  # Now a list of data frames instead of a list of lists, saves a lot of space
-      mutate(MP = myMSE@MPs[m], Simulation = x)
-  }) %>% bind_rows()
-}) %>% bind_rows()
+plot_Select_Maturity(Hist1)
+plot_Select_Maturity(MSE1)
+plot_Select_Maturity(HistList)
+plot_Select_Maturity(MSEList)
 
 

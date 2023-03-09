@@ -3,3 +3,6 @@
 ^data-raw$
 ^LICENSE\.md$
 ^README\.Rmd$
+^develop.R
+^docs$
+^man-roxygen$

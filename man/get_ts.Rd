@@ -47,6 +47,8 @@ If \code{x} is a list of objects, \code{model} will be taken from \code{names(x)
 If \code{names(x)} is \code{NULL}, \code{model} will be given sequential numerical values (e.g., \verb{Model 1}, \verb{Model 2}, ...)}
 
 \item{scale}{An optional function with a single numeric argument that returns transformed or scaled numeric values. See \code{lb2kg} and \code{kg2lb} for example.}
+
+\item{...}{named arguments passed to \code{get_ts}}
 }
 \description{
 Create a data.frame with time-series information by simulation and year

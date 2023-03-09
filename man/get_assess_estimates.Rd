@@ -11,7 +11,7 @@ get_Assess_Estimates(x, model = "Model 1")
 
 \method{get_Assess_Estimates}{MSE}(x, model = "Model 1")
 
-\method{get_Assess_Estimates}{list}(x)
+\method{get_Assess_Estimates}{list}(x, model = NULL)
 }
 \arguments{
 \item{x}{An object of class \code{MSE} or a list of \code{MSE} objects, where
